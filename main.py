@@ -6,7 +6,7 @@ from datetime import datetime
 conn = sqlite3.connect("info.db")
 cursor = conn.cursor()
 
-cursor.execute('DROP TABLE IF EXISTS treinos;') # Tirar depois dos testes
+# cursor.execute('DROP TABLE IF EXISTS treinos;') < REMOVER ESSA OPÇÃO PARA CRIAR A TABELA
 def criar_tabela():
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS treinos (
@@ -50,13 +50,13 @@ def listar_treinos():
     print("Histórico de Exercícios:\n")
     for treino in treinos:
         print(f"""
-ID: {treino[0]}
-Exercício: {treino[1]}
-Peso: {treino[2]} kg
-Repetições: {treino[3]} 
-RIR (Repetições na reserva): {treino[4]} reps. na reserva
-Data: {treino[5]}
------------------------
+            ID: {treino[0]}
+            Exercício: {treino[1]}
+            Peso: {treino[2]} kg
+            Repetições: {treino[3]} 
+            RIR (Repetições na reserva): {treino[4]} reps. na reserva
+            Data: {treino[5]}
+            -----------------------
 """)
 
 def listar_treinos_por_data(data):
@@ -67,9 +67,7 @@ def listar_treinos_por_data(data):
         print("Data inválida! Use o formato DD/MM/AAAA.")
         return
 
-    cursor.execute("""
-        SELECT * FROM treinos WHERE data = ?
-    """, (data_formatada,))
+    cursor.execute("SELECT * FROM treinos WHERE data = ?", (data_formatada,))
 
     treinos = cursor.fetchall()
 
@@ -88,6 +86,57 @@ RIR (Repetições na reserva): {treino[4]} reps. na reserva
 -----------------------
 """)
         
+def editar_treino(editar):
+    cursor.execute(" SELECT * FROM treinos WHERE id = ? ", (editar,))
+    if cursor.rowcount >=1:
+        print(f"Exercício com o ID:{editar} selecionado.")
+        
+    id_edit = int(input("""Selecione o que você deseja mudar:
+Exercício: 1
+Peso: 2
+Repetições: 3
+RIR: 4
+Data: 5
+        """))
+    if id_edit == 1:
+        exercicio_novo = input(f"Você selecionou a opção '{id_edit}'. Digite sua alteração:").strip()
+        cursor.execute("""UPDATE treinos
+        SET exercicio = ?
+        WHERE id = ?
+        """, (exercicio_novo, editar))
+        
+    if id_edit == 2:
+        exercicio_novo = float(input(f"Você selecionou a opção '{id_edit}'. Digite sua alteração:"))
+        cursor.execute("""UPDATE treinos
+        SET peso = ?
+        WHERE id = ?
+        """, (exercicio_novo, editar))
+
+    if id_edit == 3:
+        exercicio_novo = float(input(f"Você selecionou a opção '{id_edit}'. Digite sua alteração:"))
+        cursor.execute("""UPDATE treinos
+        SET repeticoes = ?
+        WHERE id = ?
+        """, (exercicio_novo, editar))
+
+    if id_edit == 4:
+        exercicio_novo = float(input(f"Você selecionou a opção '{id_edit}'. Digite sua alteração:"))
+        cursor.execute("""UPDATE treinos
+        SET rir = ?
+        WHERE id = ?
+        """, (exercicio_novo, editar))
+
+    if id_edit == 5:
+        exercicio_novo = (input(f"Você selecionou a opção '{id_edit}'. Digite sua alteração (DD/MM/AAAA):")).strip()
+        cursor.execute("""UPDATE treinos
+        SET data = ?
+        WHERE id = ?
+        """, (exercicio_novo, editar))
+    else:
+        print(f'Nenhum exercício encontrado com o ID: {editar}.')
+    conn.commit()
+    
+        
 def deletar_exercicio(deletar):
     cursor.execute("""
         DELETE FROM treinos WHERE id = ?
@@ -104,8 +153,9 @@ while True:
 1 - Adicionar exercício
 2 - Listar exercícios
 3 - Listar exercícios por data
-4 - Deletar exercício
-5 - Sair
+4 - Editar exercício
+5 - Deletar exercício
+6 - Sair
 """)
     opcao = input("Escolha uma opção: ")
 
@@ -125,6 +175,14 @@ while True:
         listar_treinos_por_data(data)
 
     elif opcao == "4":
+        editar = int(input('Escolha um exercício para editar:'))
+        try: 
+            editar_id = int(editar)
+            editar_treino(editar_id)
+        except ValueError:
+            print('ID desconhecido, digite um ID válido.')
+        
+    elif opcao == "5":
         deletar = (input('Escolha um exercício para excluir:'))
         try:
             deletar_id = int(deletar)
@@ -132,7 +190,7 @@ while True:
         except ValueError:
             print('ID desconhecido, digite um ID válido.')
     
-    elif opcao == "5":
+    elif opcao == "6":
         print("Encerrando...")
         break
 
